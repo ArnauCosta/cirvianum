@@ -47,7 +47,7 @@ public class Reserva{
 		this.client = client;
 	}
 	
-	public String[] crearReserva(){
+	public String[] reservaToArray(){
         String[] array = new String[4];
         array[0]=this.diaEntrada.getDayOfMonth()+"/"+this.diaEntrada.getMonthValue()+"/"+this.diaEntrada.getYear();
         array[1]=client.getDni();
