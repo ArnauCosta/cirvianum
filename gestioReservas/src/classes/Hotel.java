@@ -50,20 +50,30 @@ public class Hotel{
 		this.llistaReservaC = llistaReservaC;
 	}
 	
-	public void setReservaC(Reserva ReservaC) {
+	public void addReservaC(Reserva ReservaC) {
 		this.llistaReservaC.add(ReservaC);
 	}
 	
-	public void setReservaP(Reserva ReservaP) {
+	public void addReservaP(Reserva ReservaP) {
 		this.llistaReservaP.add(ReservaP);
 	}
 	
-	public void setNouClient(Client client) {
+	public void addNouClient(Client client) {
 		this.llistaClients.add(client);
 	}
+
 	
-	public void setHabitacio (Habitacio habitacio) {
+	public void addHabitacio (Habitacio habitacio) {
 		this.llistaHabitacio.add(habitacio);
+	}
+	
+	public Habitacio cercaHabitacioPerNum(int numHabitacio) {
+		for (Habitacio h : this.getLlistaHabitacio()) {
+			if (h.getNumHabitacio() == numHabitacio) {
+				return h;
+			}
+		}
+		return null;
 	}
 	
 

@@ -1,19 +1,15 @@
 package control;
 
-import finestra.*;
-import classes.*;
-import classes.Client;
-import finestra.*;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.KeyEvent;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Locale;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
@@ -21,15 +17,20 @@ import javax.swing.border.Border;
 
 import com.toedter.calendar.JCalendar;
 
+import classes.*;
+import finestra.*;
+
 public class Control {
 
 	static Border borderInCorrecte = BorderFactory.createLineBorder(Color.RED, 1);
 	static Hotel hotel;
+	static int numPers = 1; // numero de persones maximes d'una habitacio a la que podran accedir un grup de
+							// persones.
 
-	public static void setBorderIfRegex(String regex, JTextField textField) { // aquesta funcio se li pasa una regex i
-																				// un text field i si el contingut del
-																				// text field no compleix la regex posa
-																				// un border.
+	public void setBorderIfRegex(String regex, JTextField textField) { // aquesta funcio se li pasa una regex i
+																		// un text field i si el contingut del
+																		// text field no compleix la regex posa
+																		// un border.
 		if (textField.getText().matches(regex)) {
 			textField.setBorder(UIManager.getBorder("TextField.border"));
 		} else {
@@ -38,23 +39,48 @@ public class Control {
 
 	}
 
-	public static void crearHotel(String nomHotel) {
+	public void crearHotel(String nomHotel) {
 		hotel = new Hotel(nomHotel);
 	}
 
-	public static void afegirGestio() {
+	public void afegirGestio() {
 
 		Client clientRegistre = retornaClientPerUtilitzar(Finestra.getInfoClient()[0]);
 
 		// Creacio de una nova reserva la qual es desara en el array de dintre hotel.
 		Reserva novaReserva = new Reserva(clientRegistre);
 		Object[] arrayReserva = Finestra.getInfoReserva();
-		novaReserva.setDiaEntrada((LocalDate)arrayReserva[2]);
-//		novaReserva.setHabitacio(habitacio);     aqui afegire la habitacio, pero de moment no las he creat, aixi que ho comento ja que encara no utilitzare habitacions.
-		novaReserva.setNumNits(Integer.parseInt((String)arrayReserva[1]));
-		novaReserva.setNumPersones(Integer.parseInt((String)arrayReserva[0]));
-		hotel.setReservaP(novaReserva);
-		Finestra.afegeixReservaPendent(novaReserva.reservaToArray());
+		novaReserva.setDiaEntrada((LocalDate) arrayReserva[2]);
+		novaReserva.setNumNits(Integer.parseInt((String) arrayReserva[1]));
+		novaReserva.setNumPersones(Integer.parseInt((String) arrayReserva[0]));
+		novaReserva.calculaDiaSortida();
+		Habitacio habitacio = comprovaHabitacions(novaReserva);
+		if (habitacio != null) {
+			novaReserva.setHabitacio(habitacio);
+			Finestra.afegeixReservaPendent(novaReserva.reservaToArray());
+			hotel.addReservaP(novaReserva);
+		} else {
+			JOptionPane.showMessageDialog(null, "Habitació no trovada, no es fara la reserva");
+		}
+	}
+
+	public Habitacio comprovaHabitacions(Reserva reserva) {
+		for (int i = 0; i < numPers; i++) {
+			for (Habitacio h : hotel.getLlistaHabitacio()) {
+				System.out.println("Habitacio per entrar");
+				if (h.getNumPersonesMax() == reserva.getNumPersones() + i) {
+
+					System.out.println("Habitacio ha entrat habitacio");
+
+					reserva.setHabitacio(h);
+					if (comprovaHabitacio(reserva)) {
+						return h;
+					}
+				}
+			}
+		}
+
+		return null;
 	}
 
 	public static Client retornaClientPerUtilitzar(String dni) {
@@ -64,13 +90,13 @@ public class Control {
 			client = new Client(dni);
 			client.setCog(Finestra.getInfoClient()[1]);
 			client.setNom(Finestra.getInfoClient()[2]);
-			hotel.setNouClient(client);
+			hotel.addNouClient(client);
 		}
 
 		return client;
 	}
 
-	public static LocalDate getLocalDateFromJCalendar(JCalendar calendari) {
+	public LocalDate getLocalDateFromJCalendar(JCalendar calendari) {
 		long ms = calendari.getDate().getTime();
 		return Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).toLocalDate();
 	}
@@ -85,7 +111,7 @@ public class Control {
 		return null;
 	}
 
-	public static void comprovaValidesaDniICanviaBorder(String dni, JTextField textField) {
+	public void comprovaValidesaDniICanviaBorder(String dni, JTextField textField) {
 		String numDniString = dni.substring(0, 8);
 		int numDni = Integer.parseInt(numDniString);
 		char lletres[] = { 'T', 'R', 'W', 'A', 'G', 'M', 'Y', 'F', 'P', 'D', 'X', 'B', 'N', 'J', 'Z', 'S', 'Q', 'V',
@@ -98,7 +124,57 @@ public class Control {
 
 	}
 
-	public static Border getBorderIncorrecte() {
+	public void comprovaCampsClient(KeyEvent e) {
+		switch (e.getComponent().getName()) {
+		case "tbDni":
+			setBorderIfRegex("^[0-9]{8,8}[A-Za-z]$", (JTextField) e.getComponent());
+			comprovaValidesaDniICanviaBorder(((JTextField) e.getComponent()).getText(), (JTextField) e.getComponent());
+			break;
+
+		case "tbNom":
+			setBorderIfRegex("^[A-Za-z\\s]{1,}[\\.]{0,1}[A-Za-z\\s]{0,}$", (JTextField) e.getComponent());
+			break;
+
+		case "tbCog":
+			setBorderIfRegex("^[A-Za-z\\s]{1,}[\\.]{0,1}[A-Za-z\\s]{0,}$", (JTextField) e.getComponent());
+			break;
+
+		case "tbNumP":
+			setBorderIfRegex("^([1-9]|[1-9][0-9]|100)$", (JTextField) e.getComponent()); // reservas de 1 a 100 persones
+			break;
+
+		case "tbNumN":
+			setBorderIfRegex("^([1-9]|[1-9][0-9]|100)$", (JTextField) e.getComponent()); // reservas de 1 a 100
+																							// habitacions
+			break;
+
+		}
+	}
+
+	public void comprovaTotsElsCampsSonCorrectes(JPanel panellClient, JButton reserva) {
+		boolean totCorrecte = true;
+		for (Component component : panellClient.getComponents()) {
+			if (component instanceof JTextField) {
+				if ((((JTextField) component).getText().isEmpty())) { // comprova si esta buit, si ho esta, escontara
+																		// malament encara que no tingui el border
+																		// incorrecte
+					totCorrecte = false;
+					break;
+				}
+				if (((JTextField) component).getBorder().equals(getBorderIncorrecte())) {
+					totCorrecte = false;
+					break;
+				}
+			}
+		}
+		if (totCorrecte) {
+			reserva.setEnabled(true);
+		} else {
+			reserva.setEnabled(false);
+		}
+	}
+
+	public Border getBorderIncorrecte() {
 		return borderInCorrecte;
 	}
 
@@ -112,6 +188,55 @@ public class Control {
 			}
 		}
 		return null;
+	}
+
+	public void creaHabitacio(int numHabitacio, int numPersones) {
+
+		Habitacio habitacio = hotel.cercaHabitacioPerNum(numHabitacio);
+		if (habitacio != null) {
+			int opcio = JOptionPane.showConfirmDialog(null, "El número d'habitació ja existeix. Capacitat Actual:"
+					+ habitacio.getNumHabitacio() + " persones. Vols Actualitzar-la");
+			switch (opcio) {
+			case 0:
+				JOptionPane.showMessageDialog(null, "Habitació actualitzada correctament");
+				habitacio.setNumPersonesMax(numPersones);
+				break;
+			case 1:
+				break;
+			case 2:
+				break;
+			}
+
+		} else {
+			habitacio = new Habitacio(numHabitacio);
+			habitacio.setNumPersonesMax(numPersones);
+			hotel.addHabitacio(habitacio);
+			JOptionPane.showMessageDialog(null, "Habitació afegida correctament");
+		}
+	}
+
+	public boolean comprovaHabitacio(Reserva reserva) {
+		for (Reserva r : hotel.getLlistaReservaP()) {
+			if (r.getHabitacio().getNumHabitacio() == reserva.getHabitacio().getNumHabitacio()) {
+
+				if (reserva.getDiaEntrada().equals(r.getDiaEntrada())) {
+					return false;
+				} else if (reserva.getDiaEntrada().isAfter(r.getDiaEntrada())
+						&& reserva.getDiaEntrada().isBefore(r.getDiaSortida())) {
+					return false;
+				} else if (reserva.getDiaSortida().isAfter(r.getDiaSortida())
+						&& reserva.getDiaSortida().isBefore(r.getDiaSortida())) {
+					return false;
+				} else if (reserva.getDiaEntrada().isBefore(r.getDiaEntrada())
+						&& reserva.getDiaSortida().isAfter(r.getDiaSortida())) {
+					return false;
+				}
+
+			}
+		}
+
+		return true;
+
 	}
 
 }

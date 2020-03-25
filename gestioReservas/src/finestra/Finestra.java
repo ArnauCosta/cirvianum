@@ -25,6 +25,7 @@ public class Finestra extends JFrame {
 
 	// variables globals
 	static final String font = "Liberation Serif";
+	static Control c;
 	// variables globals
 
 	public JPanel panell;
@@ -44,12 +45,13 @@ public class Finestra extends JFrame {
 	
 	// variables back
 	static Border borderInCorrecte;
-	static JButton guardaNom;
-	static JTextField tbNomH;
+	static JButton guardaNom, guardaHabi;
+	static JTextField tbNomH, tbNum, tbPers;
 	// variables back
 
 
 	public Finestra() {
+		c = new Control();
 		this.setVisible(true);
 		this.setSize(1100, 620);
 		this.setLayout(null);
@@ -113,8 +115,8 @@ public class Finestra extends JFrame {
 		// taula pendents
 
 		model = new DefaultTableModel();
-		model.addColumn("Reserva");
 		model.addColumn("Dia");
+		model.addColumn("Dni");
 		model.addColumn("Persones");
 		model.addColumn("Habitació");
 
@@ -130,8 +132,8 @@ public class Finestra extends JFrame {
 		// taula confirmades
 
 		DefaultTableModel modelConfirm = new DefaultTableModel();
-		modelConfirm.addColumn("Reserva");
 		modelConfirm.addColumn("Dia");
+		modelConfirm.addColumn("Dni");
 		modelConfirm.addColumn("Persones");
 		modelConfirm.addColumn("Habitació");
 
@@ -207,51 +209,8 @@ public class Finestra extends JFrame {
 				
 				//setBorderIfRegex es una funcio que se li pasa una regex i un text field i si el contingut del text field no compleix la regex posa un border
 
-
-				switch (e.getComponent().getName()) {
-				case "tbDni":
-					Control.setBorderIfRegex("^[0-9]{8,8}[A-Za-z]$", tbDni);
-					Control.comprovaValidesaDniICanviaBorder(tbDni.getText(), tbDni); //comprova el dni, si la lletra es correcte no fa res, si la lletra no es correcte posa el border en vermell
-					break;
-					
-				case "tbNom":
-					Control.setBorderIfRegex("^[A-Za-z\\s]{1,}[\\.]{0,1}[A-Za-z\\s]{0,}$",  tbNom);
-					break;
-					
-				case "tbCog":
-					Control.setBorderIfRegex("^[A-Za-z\\s]{1,}[\\.]{0,1}[A-Za-z\\s]{0,}$",  tbCog);
-					break;
-					
-				case "tbNumP":
-					Control.setBorderIfRegex("^([1-9]|[1-9][0-9]|100)$",  tbNumP); // reservas de 1 a 100 persones
-					break;
-					
-				case "tbNumN":
-					Control.setBorderIfRegex("^([1-9]|[1-9][0-9]|100)$", tbNumN); // reservas de 1 a 100 habitacions
-					break;
-								
-				}
-				
-				
-				boolean totCorrecte = true;
-				for (Component component : panellClient.getComponents()) {
-					if(component instanceof JTextField) {
-						if((((JTextField) component).getText().isEmpty())) {  // comprova si esta buit, si ho esta, escontara malament encara que no tingui el border incorrecte
-							totCorrecte = false;
-							break;
-						}
-						if(((JTextField) component).getBorder().equals(Control.getBorderIncorrecte())) {
-							totCorrecte = false;
-							break;
-						}
-					}
-				}
-				if(totCorrecte) {
-					reserva.setEnabled(true);
-				}else {
-					reserva.setEnabled(false);
-				}
-				
+				c.comprovaCampsClient(e);
+				c.comprovaTotsElsCampsSonCorrectes(panellClient, reserva);
 				
 			}
 		};
@@ -267,7 +226,7 @@ public class Finestra extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				Control.afegirGestio();
+				c.afegirGestio();
 				clearTextFieldClients();
 			}
 		};
@@ -388,7 +347,7 @@ public class Finestra extends JFrame {
 		Object[] array = new Object[4];			//Es un array de objectes ja que retornara un ahabitacio i un localdate
 		array[0] = tbNumP.getText();
 		array[1] = tbNumN.getText();
-		array[2] = Control.getLocalDateFromJCalendar(calendari);
+		array[2] = c.getLocalDateFromJCalendar(calendari);
 		// aqui hauria de afegir tambe a l'array la habitacio pero com encara no la he creat no la afegire.
 		return array;
 	}
@@ -414,11 +373,29 @@ public class Finestra extends JFrame {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					((JFrame) SwingUtilities.windowForComponent(panellBack)).setTitle(tbNomH.getText()); // aixo es per utilitzar el frame en el que estan els panells des de l'arxiu del label.
-					Control.crearHotel(tbNomH.getText());
+					c.crearHotel(tbNomH.getText());
 				}
 			};
 			
 			guardaNom.addActionListener(listenerBotoHotel);
+			
+			
+			//listener crear habitacio
+			
+			ActionListener listenerCrearHabitacio = new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					
+					c.creaHabitacio(Integer.parseInt(tbNum.getText()), Integer.parseInt(tbPers.getText()));
+					clearHabitacio();
+
+				}
+			};
+			
+			guardaHabi.addActionListener(listenerCrearHabitacio);
+			
+			
 			
 			
 		}
@@ -426,13 +403,19 @@ public class Finestra extends JFrame {
 		private static void borderBack() {
 	        borderInCorrecte = BorderFactory.createLineBorder(Color.RED, 1);
 		}
+		
+		
+		public static void clearHabitacio() {
+			tbNum.setText(null);
+			tbPers.setText(null);
+		}
 
 		private static void botoBack() {
 			guardaNom = new JButton("Guarda");
 			guardaNom.setBounds(20, 100, 320, 30);
 			panellBack.add(guardaNom);
 			
-			JButton guardaHabi = new JButton("Guarda");
+			guardaHabi = new JButton("Guarda");
 			guardaHabi.setBounds(20, 205, 320, 30);
 			panellBack.add(guardaHabi);
 			
@@ -447,11 +430,11 @@ public class Finestra extends JFrame {
 	        panellBack.add(tbNomH);
 	        
 	        
-	        JTextField tbNum = new JTextField();
+	        tbNum = new JTextField();
 	        tbNum.setBounds(70, 170, 100,25);
 	        panellBack.add(tbNum);
 	        
-	        JTextField tbPers = new JTextField();
+	        tbPers = new JTextField();
 	        tbPers.setBounds(240, 170, 100,25);
 	        panellBack.add(tbPers);
 	        
