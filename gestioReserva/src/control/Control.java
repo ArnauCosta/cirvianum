@@ -132,6 +132,14 @@ public class Control {
         switch (e.getComponent().getName()) {
             case "tbDni":
                 setBorderIfRegex("^[0-9]{8,8}[A-Za-z]$", (JTextField) e.getComponent());
+                if(((JTextField)e.getComponent()).getBorder().equals(borderInCorrecte)){
+                    Finestra.returnNomClient().setText(null);
+                    Finestra.returnNomClient().setEnabled(true);
+                    Finestra.returnCogClient().setText(null);
+                    Finestra.returnCogClient().setEnabled(true);
+                }else{
+                    comprovaClientExistent(((JTextField) e.getComponent()).getText());
+                }
                 comprovaValidesaDniICanviaBorder(((JTextField) e.getComponent()).getText(), (JTextField) e.getComponent());
                 break;
 
@@ -146,6 +154,19 @@ public class Control {
             case "tbNumN":
                 setBorderIfRegex("^([1-9]|[1-9][0-9]|100)$", (JTextField) e.getComponent()); // reservas i habitacions de 1 a 100 persones
                 break;
+        }
+    }
+
+    public void comprovaClientExistent(String dni){
+        for (Client c : hotel.getLlistaClients()) {
+            if(c.getDni().equals(dni)){
+                Finestra.returnNomClient().setText(c.getNom());
+                Finestra.returnNomClient().setEnabled(false);
+
+                Finestra.returnCogClient().setText(c.getCog());
+                Finestra.returnCogClient().setEnabled(false);
+                break;
+            }
         }
     }
 
@@ -174,6 +195,23 @@ public class Control {
 
     public Border getBorderIncorrecte() {
         return borderInCorrecte;
+    }
+
+    public void canviBorderCrearHabitacio(JTextField camp){
+        if(camp.getText().isEmpty()){
+            camp.setBorder(UIManager.getBorder("TextField.border"));
+        } else if(!comprovaSiStringEsNumeric(camp.getText())){
+            camp.setBorder(borderInCorrecte);
+        } else{
+            camp.setBorder(UIManager.getBorder("TextField.border"));
+        }
+    }
+
+    public boolean comprovaSiStringEsNumeric(String text){
+        if(text.matches("^[0-9]+")){
+            return true;
+        }
+        return false;
     }
 
      public void creaHabitacio(int numHabitacio, int numPersones) {

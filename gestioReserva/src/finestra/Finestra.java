@@ -276,6 +276,8 @@ public class Finestra extends JFrame {
                 c.afegirGestio();
                 clearTextFieldClients();
                 reserva.setEnabled(false);
+                tbNom.setEnabled(true);
+                tbCog.setEnabled(true);
             }
         };
         reserva.addActionListener(listenerReserva);
@@ -327,6 +329,9 @@ public class Finestra extends JFrame {
         tbNumN.setName("tbNumN");
         panellClient.add(tbNumN);
     }
+
+    public static JTextField returnNomClient(){return tbNom;}
+    public static JTextField returnCogClient(){return tbCog;}
 
     private static void clearTextFieldClients() {
         for (Component component : panellClient.getComponents()) {
@@ -488,6 +493,20 @@ public class Finestra extends JFrame {
         };
         jbElimina.addActionListener(listenerElimina);
 
+        KeyListener listenerCreaHabitacioText = new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {}
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                c.canviBorderCrearHabitacio((JTextField) e.getComponent());
+            }
+        };
+        tbNum.addKeyListener(listenerCreaHabitacioText);
+        tbPers.addKeyListener(listenerCreaHabitacioText);
     }
 
 
