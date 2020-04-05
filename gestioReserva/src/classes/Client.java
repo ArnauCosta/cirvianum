@@ -36,7 +36,7 @@ public class Client{
 
 
     public String toStringClie() {
-        return this.cog+"||"+this.nom+"||"+this.dni;
+        return this.dni+"--"+this.nom+"--"+this.cog;
     }
 
     @Override

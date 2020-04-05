@@ -2,7 +2,7 @@ package classes;
 
 public class Habitacio{
 
-    int numHabitacio, numPersonesMax;
+    private  int numHabitacio, numPersonesMax;
 
 
 
@@ -24,5 +24,10 @@ public class Habitacio{
 
     public void setNumPersonesMax(int numPersonesMax) {
         this.numPersonesMax = numPersonesMax;
+    }
+
+    @Override
+    public String toString() {
+        return numHabitacio+"--"+numPersonesMax;
     }
 }

@@ -4,10 +4,10 @@ import java.util.ArrayList;
 
 public class Hotel {
 
-    String nomHotel;
-    ArrayList<Habitacio> llistaHabitacio = new ArrayList<Habitacio>();
-    ArrayList<Client> llistaClients;
-    ArrayList<Reserva> llistaReserva;
+    private String nomHotel;
+    private ArrayList<Habitacio> llistaHabitacio = new ArrayList<Habitacio>();
+    private ArrayList<Client> llistaClients;
+    private ArrayList<Reserva> llistaReserva;
 
 
     public Hotel(String nomHotel) {
@@ -59,17 +59,15 @@ public class Hotel {
 
     public void eliminaReserva(int i) {this.llistaReserva.remove(i);}
 
-
     public void addHabitacio(Habitacio habitacio) {
         this.llistaHabitacio.add(habitacio);
     }
 
-    public Habitacio cercaHabitacioPerNum(int numHabitacio) {
+    public Habitacio getHabitacio(int numHabitacio) {
         for (Habitacio h : this.getLlistaHabitacio()) {
             if (h.getNumHabitacio() == numHabitacio) {
                 return h;
             }
-
         }
         return null;
     }

@@ -25,10 +25,10 @@ import finestra.*;
 public class Control {
 
     static Border borderInCorrecte = BorderFactory.createLineBorder(Color.RED, 1);
-    static Hotel hotel;
-    static int numPers = 1; // numero de persones maximes d'una habitacio a la que podran accedir un grup de
-    // persones.
-    static ArrayList<Integer> idRef = new ArrayList<Integer>();  // aquest array es fara servir per relacionar la llista de reservas no confirmades amb el seu id
+    static Hotel hotel = new Hotel("Hotel");
+    static int numPers = 1; // numero de persones maximes d'una habitacio a la que podran accedir un grup de persones.
+    static Fitxer f = new Fitxer(hotel);
+    static ArrayList<Integer> idRef =  f.idRef(); // aquest array es fara servir per relacionar la llista de reservas no confirmades amb el seu id
 
     public void setBorderIfRegex(String regex, JTextField textField) { // aquesta funcio se li pasa una regex i
         // un text field i si el contingut del
@@ -43,8 +43,11 @@ public class Control {
     }
 
     public void crearHotel(String nomHotel) {
-        hotel = new Hotel(nomHotel);
+        hotel.setNomHotel("nomHotel");
+        f.desaNomHotel(nomHotel);
     }
+
+    public Hotel getHotel() {return hotel;}
 
     public void afegirGestio() {
 
@@ -62,7 +65,9 @@ public class Control {
             novaReserva.setHabitacio(habitacio);
             Finestra.afegeixReservaPendent(novaReserva.reservaToArray());
             idRef.add(novaReserva.getIdReserva());
+            f.desaIdRef(novaReserva.getIdReserva());
             hotel.addReserva(novaReserva);
+            f.desaReserva(novaReserva);
         } else {
             JOptionPane.showMessageDialog(null, "Habitacio no trovada, no es fara la reserva");
         }
@@ -72,11 +77,7 @@ public class Control {
     public Habitacio comprovaHabitacions(Reserva reserva) {
         for (int i = 0; i < numPers + 1; i++) {
             for (Habitacio h : hotel.getLlistaHabitacio()) {
-                System.out.println("Habitacio per entrar");
                 if (h.getNumPersonesMax() == reserva.getNumPersones() + i) {
-
-                    System.out.println("Habitacio ha entrat habitacio");
-
                     reserva.setHabitacio(h);
                     if (comprovaHabitacio(reserva)) {
                         return h;
@@ -95,8 +96,8 @@ public class Control {
             client.setNom(Finestra.getInfoClient()[1]);
             client.setCog(Finestra.getInfoClient()[2]);
             hotel.addNouClient(client);
+            f.desaClient(client);
         }
-
         return client;
     }
 
@@ -106,7 +107,6 @@ public class Control {
     }
 
     public static Client existeixClient(String dni) {
-
         for (Client client : hotel.getLlistaClients()) {
             if (client.getDni().equals(dni)) {
                 return client;
@@ -132,12 +132,12 @@ public class Control {
         switch (e.getComponent().getName()) {
             case "tbDni":
                 setBorderIfRegex("^[0-9]{8,8}[A-Za-z]$", (JTextField) e.getComponent());
-                if(((JTextField)e.getComponent()).getBorder().equals(borderInCorrecte)){
+                if (((JTextField) e.getComponent()).getBorder().equals(borderInCorrecte)) {
                     Finestra.returnNomClient().setText(null);
                     Finestra.returnNomClient().setEnabled(true);
                     Finestra.returnCogClient().setText(null);
                     Finestra.returnCogClient().setEnabled(true);
-                }else{
+                } else {
                     comprovaClientExistent(((JTextField) e.getComponent()).getText());
                 }
                 comprovaValidesaDniICanviaBorder(((JTextField) e.getComponent()).getText(), (JTextField) e.getComponent());
@@ -157,9 +157,36 @@ public class Control {
         }
     }
 
-    public void comprovaClientExistent(String dni){
+    public static LocalDate arrayToLocalDate(String[] arrayData) {
+        int[] arrayInt = new int[3];
+        for (int i = 0; i < arrayData.length; i++) {
+            arrayInt[i] = Integer.parseInt(arrayData[i]);
+        }
+        return LocalDate.of(arrayInt[0], arrayInt[1], arrayInt[2]);
+    }
+
+
+    public static Client getClientByDni(String dni) {
         for (Client c : hotel.getLlistaClients()) {
             if(c.getDni().equals(dni)){
+                return c;
+            }
+        }
+        return null;
+    }
+
+    public static Habitacio getHabitacioByNum (int numHab) {
+        for (Habitacio h : hotel.getLlistaHabitacio()) {
+            if(h.getNumHabitacio()==numHab){
+                return h;
+            }
+        }
+        return null;
+    }
+
+    public void comprovaClientExistent(String dni) {
+        for (Client c : hotel.getLlistaClients()) {
+            if (c.getDni().equals(dni)) {
                 Finestra.returnNomClient().setText(c.getNom());
                 Finestra.returnNomClient().setEnabled(false);
 
@@ -197,26 +224,26 @@ public class Control {
         return borderInCorrecte;
     }
 
-    public void canviBorderCrearHabitacio(JTextField camp){
-        if(camp.getText().isEmpty()){
+    public void canviBorderCrearHabitacio(JTextField camp) {
+        if (camp.getText().isEmpty()) {
             camp.setBorder(UIManager.getBorder("TextField.border"));
-        } else if(!comprovaSiStringEsNumeric(camp.getText())){
+        } else if (!comprovaSiStringEsNumeric(camp.getText())) {
             camp.setBorder(borderInCorrecte);
-        } else{
+        } else {
             camp.setBorder(UIManager.getBorder("TextField.border"));
         }
     }
 
-    public boolean comprovaSiStringEsNumeric(String text){
-        if(text.matches("^[0-9]+")){
+    public boolean comprovaSiStringEsNumeric(String text) {
+        if (text.matches("^[0-9]+")) {
             return true;
         }
         return false;
     }
 
-     public void creaHabitacio(int numHabitacio, int numPersones) {
+    public void creaHabitacio(int numHabitacio, int numPersones) {
 
-        Habitacio habitacio = hotel.cercaHabitacioPerNum(numHabitacio);
+        Habitacio habitacio = hotel.getHabitacio(numHabitacio);
         if (habitacio != null) {
             int opcio = JOptionPane.showConfirmDialog(null, "El numero d'habitacio ja existeix. Capacitat Actual: "
                     + habitacio.getNumHabitacio() + " persones. Vols Actualitzar-la");
@@ -224,6 +251,7 @@ public class Control {
                 case 0:
                     JOptionPane.showMessageDialog(null, "Habitacio actualitzada correctament");
                     habitacio.setNumPersonesMax(numPersones);
+                    f.actualitzaHabitacio(numHabitacio, numPersones);
                     break;
                 case 1:
                     break;
@@ -236,6 +264,7 @@ public class Control {
             habitacio.setNumPersonesMax(numPersones);
             hotel.addHabitacio(habitacio);
             JOptionPane.showMessageDialog(null, "Habitacio afegida correctament");
+            f.desaHabitacio(habitacio);
         }
     }
 
@@ -263,27 +292,33 @@ public class Control {
 
     }
 
-    public void eliminarReservaPendent(MouseEvent e, JTable taula, DefaultTableModel model){
+    public void eliminarReservaPendent(MouseEvent e, JTable taula, DefaultTableModel model) {
         if (e.getClickCount() == 2) {
             int a = taula.rowAtPoint(e.getPoint());
-            String[] botons = { "Confirmar-la", "Descartar-la", "Cancelar" };
-            int opcio = JOptionPane.showOptionDialog(null, "Que vols fer amb aquesta reserva?","", JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, botons, botons[0]);
+            int id = idRef.get(a);
+            String[] botons = {"Confirmar-la", "Descartar-la", "Cancelar"};
+            int opcio = JOptionPane.showOptionDialog(null, "Que vols fer amb aquesta reserva?", "", JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, botons, botons[0]);
 
             switch (opcio) {
                 case 0:
                     JOptionPane.showMessageDialog(null, "Reserva confirmada correctament");
 
                     Finestra.getBotoDateChooser().setDate(new Date());
-                    cercaReservaPerId(idRef.get(a)).setConfirmada(true);
+                    cercaReservaPerId(id).setConfirmada(true);
                     refreshReservaConfirmada(Finestra.getModelC(), Finestra.getBotoSE().getModel().isSelected(), getLocalDateFromJCalendar(Finestra.getBotoDateChooser().getJCalendar()));
                     model.removeRow(a);
                     idRef.remove(a);
+                    f.eliminaIdRef(id);
+                    f.eliminaReserva(id);
+                    f.desaReserva(cercaReservaPerId(id));
 
                     break;
                 case 1:
                     model.removeRow(a);
-                    hotel.eliminaReserva(idRef.get(a));
+                    hotel.eliminaReserva(id);
                     idRef.remove(a);
+                    f.eliminaIdRef(id);
+                    f.eliminaReserva(id);
                     JOptionPane.showMessageDialog(null, "Reserva eliminada correctament");
                     break;
                 case 2:
@@ -295,24 +330,24 @@ public class Control {
 
     public Reserva cercaReservaPerId(int id) {
         for (Reserva r : hotel.getLlistaReserva()) {
-            if(r.getIdReserva()==id){
+            if (r.getIdReserva() == id) {
                 return r;
             }
         }
         return null;
     }
 
-        public void refreshReservaConfirmada(DefaultTableModel modelC, boolean entradaSortida, LocalDate data) {
+    public void refreshReservaConfirmada(DefaultTableModel modelC, boolean entradaSortida, LocalDate data) {
         modelC.setRowCount(0);
-         //entradaSortida:    true = sortida       false = entrada
+        //entradaSortida:    true = sortida       false = entrada
         for (Reserva r : hotel.getLlistaReserva()) {
-            if(r.isConfirmada()){
-                if(entradaSortida){
-                    if(r.getDiaSortida().equals(data)){
+            if (r.isConfirmada()) {
+                if (entradaSortida) {
+                    if (r.getDiaSortida().equals(data)) {
                         modelC.addRow(r.reservaToArray());
                     }
-                }else{
-                    if(r.getDiaEntrada().equals(data)){
+                } else {
+                    if (r.getDiaEntrada().equals(data)) {
                         modelC.addRow(r.reservaToArray());
                     }
                 }
@@ -320,42 +355,53 @@ public class Control {
         }
     }
 
+    public void refreshReservaPendent(DefaultTableModel model) {
+        model.setRowCount(0);
+        //entradaSortida:    true = sortida       false = entrada
+        for (Integer id : idRef) {
+            model.addRow(cercaReservaPerId(id).reservaToArray());
+        }
+    }
 
-    public void cercaClientPerNom(String text, DefaultListModel<Client> listModelC ) {
+
+    public void cercaClientPerNom(String text, DefaultListModel<Client> listModelC) {
         for (Client c : hotel.getLlistaClients()) {
-            if(!text.isEmpty()) {
-                if(c.toStringClie().contains(text)){
+            if (!text.isEmpty()) {
+                if (c.toStringClie().contains(text)) {
                     listModelC.addElement(c);
                 }
             }
         }
     }
 
-    public void ompleReservesDeClient(Client c, DefaultListModel<Reserva> listModelR ) {
+    public void ompleReservesDeClient(Client c, DefaultListModel<Reserva> listModelR) {
         for (Reserva r : hotel.getLlistaReserva()) {
-            if(r.getClient().equals(c)){
+            if (r.getClient().equals(c)) {
                 listModelR.addElement(r);
             }
         }
     }
 
     public void eliminaReserva(Reserva r) {
-        if(r.isConfirmada()){
-            hotel.getLlistaReserva().remove(r);
-            refreshReservaConfirmada(Finestra.getModelC(), Finestra.getBotoSE().getModel().isSelected(), getLocalDateFromJCalendar(Finestra.getBotoDateChooser().getJCalendar()));
-        }else{
-            int i = 0;
-            for (int v : idRef) {
-                if(v==r.getIdReserva()){
-                    i = idRef.indexOf(v);
-                }
+        int i = 0;
+        for (int v : idRef) {
+            if (v == r.getIdReserva()) {
+                i = idRef.indexOf(v);
             }
+        }
+
+        if (r.isConfirmada()) {
+            hotel.getLlistaReserva().remove(r);
+            f.eliminaReserva(idRef.get(i));
+            refreshReservaConfirmada(Finestra.getModelC(), Finestra.getBotoSE().getModel().isSelected(), getLocalDateFromJCalendar(Finestra.getBotoDateChooser().getJCalendar()));
+        } else {
             Finestra.returnModelP().removeRow(i);
+            f.eliminaIdRef(idRef.get(i));
+            f.eliminaReserva(idRef.get(i));
             idRef.remove(i);
             hotel.getLlistaReserva().remove(r);
         }
     }
-
 }
 
 

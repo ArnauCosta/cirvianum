@@ -12,6 +12,8 @@ import java.awt.Font;
 import java.awt.Image;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.sql.Date;
+import java.time.Instant;
 import java.util.Arrays;
 
 import javax.swing.*;
@@ -46,12 +48,13 @@ public class Finestra extends JFrame {
     static DefaultTableModel model, modelC;
     static JTable taula, taulaConfirm;
     static JToggleButton selectorSortidaEntrada;
-    static JCalendar calendari;
     static JDateChooser data;
 
     // variables Client
     static JTextField tbDni, tbNom, tbCog, tbNumP, tbNumN;
     static JButton reserva;
+    static JCalendar calendari;
+
 
     // variables back
     static Border borderInCorrecte;
@@ -69,7 +72,7 @@ public class Finestra extends JFrame {
         this.setSize(1100, 620);
         this.setLayout(null);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        this.setTitle("Reservas");
+        this.setTitle(c.getHotel().getNomHotel());
         this.setResizable(true);
         this.getContentPane().setBackground(Color.black);
         this.setLocationRelativeTo(null);
@@ -140,6 +143,8 @@ public class Finestra extends JFrame {
         data = new JDateChooser();
         data.setBounds(210, 305, 120, 20);
         panellGestio.add(data);
+        data.setDate(Date.from(Instant.now()));
+        c.refreshReservaConfirmada(modelC, selectorSortidaEntrada.getModel().isSelected(), c.getLocalDateFromJCalendar(data.getJCalendar()));
     }
 
     private static void taulaGestio() {
@@ -171,6 +176,7 @@ public class Finestra extends JFrame {
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scroll.setBounds(30, 100, 300, 200);
         panellGestio.add(scroll);
+        c.refreshReservaPendent(model);
 
         // taula confirmades
 
@@ -487,8 +493,8 @@ public class Finestra extends JFrame {
         ActionListener listenerElimina = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                c.ompleReservesDeClient(jlClient.getSelectedValue(),listModelR);
                 c.eliminaReserva(jlHabitacio.getSelectedValue());
+                listModelR.remove(jlClient.getSelectedIndex());
             }
         };
         jbElimina.addActionListener(listenerElimina);

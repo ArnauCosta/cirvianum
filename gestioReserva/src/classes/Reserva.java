@@ -1,20 +1,33 @@
 package classes;
 
+import classes.*;
 import java.time.LocalDate;
 
 public class Reserva {
-    static int reservaIdCounter = 0; //servirea per incrementar el id de reserva en cada reserva que es fagi.
-    LocalDate diaEntrada, diaSortida;
-    int numNits, numPersones, idReserva; //es el id amb els que s'identificaran las reserves, s'utilitzara per buscarles a l'array i a las llistas
-    Habitacio habitacio;
-    Client client;
-    boolean confirmada;
-
+    private int idReserva;
+    private static int reservaIdCounter = 0; //servira per incrementar el id de reserva en cada reserva que es fagi.
+    private LocalDate diaEntrada, diaSortida;
+    private int numNits, numPersones; //es el id amb els que s'identificaran las reserves, s'utilitzara per buscarles a l'array i a las llistas
+    private Habitacio habitacio;
+    private Client client;
+    private boolean confirmada;
 
     public Reserva(Client client) {
         this.client = client;
         this.confirmada = false;
         this.idReserva = reservaIdCounter++;
+    }
+
+    public static int getReservaIdCounter() {
+        return reservaIdCounter;
+    }
+
+    public static void setReservaIdCounter(int reservaIdCounter) {
+        Reserva.reservaIdCounter = reservaIdCounter;
+    }
+
+    public Reserva(int idReserva){
+        this.idReserva = idReserva;
     }
 
     public int getIdReserva() {
@@ -44,7 +57,6 @@ public class Reserva {
     public void calculaDiaSortida() {
         this.diaSortida = diaEntrada.plusDays(numNits);
     }
-
 
     public LocalDate getDiaEntrada() {
         return diaEntrada;
@@ -95,6 +107,10 @@ public class Reserva {
         array[3] = Integer.toString(this.habitacio.getNumHabitacio());
         array[4] = Integer.toString(this.idReserva);
         return array;
+    }
+
+    public String toStringRes(){
+        return this.idReserva+"--"+this.diaEntrada+"--"+this.numNits+"--"+this.numPersones+"--"+this.habitacio.getNumHabitacio()+"--"+this.client.getDni()+"--"+this.confirmada;
     }
 
     @Override
